@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: anime-tracker-proxy
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MAL_CLIENT_ID
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://your-netlify-app-url.netlify.app
