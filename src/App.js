@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { searchAnime, getSeasonalAnime } from './services/animeApi';
 import './App.css';
-
-const queryClient = new QueryClient();
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
