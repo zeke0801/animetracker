@@ -13,6 +13,7 @@ function App() {
   const [isCompactView, setIsCompactView] = useState(() => {
     return localStorage.getItem('compactView') === 'true';
   });
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -103,6 +104,30 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+      {/* QR Code Modal */}
+      {showQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
+          <div className="relative bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl">
+            <button
+              onClick={() => setShowQR(false)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+              aria-label="Close QR code"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <QRCodeSVG
+              value="https://animetrackerbyz.netlify.app"
+              size={256}
+              bgColor="transparent"
+              fgColor="currentColor"
+              className="text-gray-900 dark:text-white"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -110,7 +135,11 @@ function App() {
             Anime Tracker
           </h1>
           <div className="flex items-center gap-3">
-            <div className="bg-white dark:bg-gray-800 p-1 rounded-lg">
+            <button
+              onClick={() => setShowQR(true)}
+              className="bg-white dark:bg-gray-800 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+              aria-label="Show QR code"
+            >
               <QRCodeSVG
                 value="https://animetrackerbyz.netlify.app"
                 size={32}
@@ -118,7 +147,7 @@ function App() {
                 fgColor="currentColor"
                 className="text-gray-900 dark:text-white"
               />
-            </div>
+            </button>
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
