@@ -131,9 +131,14 @@ function App() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-            Anime Tracker
-          </h1>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+              Anime Tracker
+            </h1>
+            <p className="mt-1 text-gray-600 dark:text-gray-400 text-lg">
+              Is your favorite anime airing today?
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowQR(true)}
