@@ -39,21 +39,30 @@ function App() {
   };
 
   const filterAnimeByTime = (anime) => {
-    if (!anime?.node?.start_date) return true;
-    const today = new Date();
-    const animeDate = new Date(anime.node.start_date);
+    if (!anime?.node?.broadcast?.day_of_the_week) return false;
 
+    const today = new Date();
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayName = daysOfWeek[today.getDay()].toLowerCase();
+    const animeDay = anime.node.broadcast.day_of_the_week.toLowerCase();
+    
     switch (timeFilter) {
       case 'today':
-        return animeDate.toDateString() === today.toDateString();
-      case 'tomorrow':
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        return animeDate.toDateString() === tomorrow.toDateString();
-      case 'past-week':
-        const weekAgo = new Date(today);
-        weekAgo.setDate(today.getDate() - 7);
-        return animeDate >= weekAgo && animeDate <= today;
+        return animeDay === todayName;
+      case 'tomorrow': {
+        const tomorrowIndex = (today.getDay() + 1) % 7;
+        const tomorrowName = daysOfWeek[tomorrowIndex].toLowerCase();
+        return animeDay === tomorrowName;
+      }
+      case 'past-week': {
+        const currentDayIndex = today.getDay();
+        const pastWeekDays = [];
+        for (let i = 7; i >= 0; i--) {
+          const dayIndex = (currentDayIndex - i + 7) % 7;
+          pastWeekDays.push(daysOfWeek[dayIndex]);
+        }
+        return pastWeekDays.includes(animeDay);
+      }
       default:
         return true;
     }
@@ -163,6 +172,11 @@ function App() {
                 {anime.node.mean && (
                   <div className="mt-2 text-sm font-semibold text-blue-600 dark:text-blue-400">
                     Rating: {anime.node.mean}
+                  </div>
+                )}
+                {anime.node.broadcast && (
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Airs: {anime.node.broadcast.day_of_the_week} at {anime.node.broadcast.start_time} (JST)
                   </div>
                 )}
                 {anime.node.start_date && (
