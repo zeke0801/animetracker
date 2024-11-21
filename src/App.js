@@ -5,6 +5,7 @@ import './App.css';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [timeFilter, setTimeFilter] = useState('today');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
   });
@@ -37,6 +38,29 @@ function App() {
     setIsDarkMode(!isDarkMode);
   };
 
+  const filterAnimeByTime = (anime) => {
+    if (!anime?.node?.start_date) return true;
+    const today = new Date();
+    const animeDate = new Date(anime.node.start_date);
+
+    switch (timeFilter) {
+      case 'today':
+        return animeDate.toDateString() === today.toDateString();
+      case 'tomorrow':
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        return animeDate.toDateString() === tomorrow.toDateString();
+      case 'past-week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(today.getDate() - 7);
+        return animeDate >= weekAgo && animeDate <= today;
+      default:
+        return true;
+    }
+  };
+
+  const filteredAnime = (searchTerm ? searchResults?.data : seasonalAnime?.data)?.filter(filterAnimeByTime);
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <div className="container mx-auto px-4 py-8">
@@ -62,6 +86,50 @@ function App() {
           </button>
         </div>
 
+        {/* Time Filter Buttons */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => setTimeFilter('all')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              timeFilter === 'all'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setTimeFilter('today')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              timeFilter === 'today'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            Today
+          </button>
+          <button
+            onClick={() => setTimeFilter('tomorrow')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              timeFilter === 'tomorrow'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            Tomorrow
+          </button>
+          <button
+            onClick={() => setTimeFilter('past-week')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              timeFilter === 'past-week'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            Past Week
+          </button>
+        </div>
+
         {/* Search Input */}
         <div className="mb-8">
           <input
@@ -75,7 +143,7 @@ function App() {
 
         {/* Anime Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {(searchTerm ? searchResults?.data : seasonalAnime?.data)?.map((anime) => (
+          {filteredAnime?.map((anime) => (
             <div
               key={anime.node.id}
               className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
@@ -95,6 +163,11 @@ function App() {
                 {anime.node.mean && (
                   <div className="mt-2 text-sm font-semibold text-blue-600 dark:text-blue-400">
                     Rating: {anime.node.mean}
+                  </div>
+                )}
+                {anime.node.start_date && (
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Release: {new Date(anime.node.start_date).toLocaleDateString()}
                   </div>
                 )}
               </div>
