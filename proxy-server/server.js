@@ -8,7 +8,9 @@ const PORT = process.env.PORT || 3001;
 
 // Enable CORS for your React app
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000'
+    origin: ['https://animetrackerbyz.netlify.app', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Middleware to parse JSON bodies
@@ -50,7 +52,6 @@ app.get('/api/*', async (req, res) => {
         });
     }
 });
-
 
 app.listen(PORT, () => {
     console.log(`Proxy server running on http://localhost:${PORT}`);

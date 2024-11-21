@@ -1,4 +1,4 @@
-const PROXY_URL = 'http://localhost:3001/api';
+const PROXY_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 export const searchAnime = async (query) => {
     const response = await fetch(`${PROXY_URL}/anime?q=${encodeURIComponent(query)}&limit=20`);

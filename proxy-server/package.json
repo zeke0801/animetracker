@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "npm install",
     "dev": "nodemon server.js"
   },
   "dependencies": {
@@ -15,5 +16,8 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
