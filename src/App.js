@@ -39,7 +39,21 @@ function App() {
   };
 
   const filterAnimeByTime = (anime) => {
+    // Skip if no broadcast info or if it's dubbed/non-Japanese
     if (!anime?.node?.broadcast?.day_of_the_week) return false;
+    if (anime.node.media_type === 'dub') return false;
+    
+    // Check if it's current season anime
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentSeason = getCurrentSeason();
+    
+    const animeStartSeason = anime.node.start_season;
+    if (!animeStartSeason || 
+        animeStartSeason.year !== currentYear || 
+        animeStartSeason.season !== currentSeason) {
+      return false;
+    }
 
     const today = new Date();
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -66,6 +80,15 @@ function App() {
       default:
         return true;
     }
+  };
+
+  // Helper function to get current season
+  const getCurrentSeason = () => {
+    const month = new Date().getMonth() + 1; // getMonth() returns 0-11
+    if (month >= 1 && month <= 3) return 'winter';
+    if (month >= 4 && month <= 6) return 'spring';
+    if (month >= 7 && month <= 9) return 'summer';
+    return 'fall';
   };
 
   const filteredAnime = (searchTerm ? searchResults?.data : seasonalAnime?.data)?.filter(filterAnimeByTime);

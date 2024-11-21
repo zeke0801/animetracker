@@ -26,7 +26,7 @@ app.get('/api/anime/season', async (req, res) => {
     try {
         const season = getCurrentSeason();
         const year = new Date().getFullYear();
-        const apiUrl = `https://api.myanimelist.net/v2/anime/season/${year}/${season}?limit=20&fields=id,title,main_picture,synopsis,mean,rank,popularity,num_episodes,status,start_date,broadcast`;
+        const apiUrl = `https://api.myanimelist.net/v2/anime/season/${year}/${season}?limit=100&fields=id,title,main_picture,synopsis,mean,rank,popularity,num_episodes,status,start_date,broadcast,media_type,source,rating,start_season`;
         
         console.log('Fetching seasonal anime from:', apiUrl); // Debug log
         console.log('Using MAL Client ID:', process.env.MAL_CLIENT_ID); // Debug log
