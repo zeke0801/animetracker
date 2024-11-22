@@ -26,7 +26,7 @@ const setStorageItem = (key, value) => {
 function App() {
   const [timeFilter, setTimeFilter] = useState('today');
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return getStorageItem('darkMode', false);
+    return getStorageItem('darkMode', true);
   });
   const [isCompactView, setIsCompactView] = useState(() => {
     return getStorageItem('compactView', false);
@@ -178,7 +178,7 @@ function App() {
                 </svg>
               ) : (
                 <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646L12 7.636l-1.318-1.318a9.003 9.003 0 00-8.354 0z" />
                 </svg>
               )}
             </button>
@@ -188,6 +188,16 @@ function App() {
         {/* Time Filter Buttons and View Toggle */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
           <div className="flex space-x-2">
+            <button
+              onClick={() => setTimeFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium text-[0.9rem] transition-colors ${
+                timeFilter === 'all'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              All
+            </button>
             <button
               onClick={() => setTimeFilter('today')}
               className={`px-4 py-2 rounded-lg font-medium text-[0.9rem] transition-colors ${
@@ -288,20 +298,56 @@ function App() {
                       Season: {anime.node.start_season.season} {anime.node.start_season.year}
                     </p>
                   )}
+                  {anime.node.streaming && anime.node.streaming.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">Stream:</span>
+                      {anime.node.streaming.map((stream, index) => (
+                        <a
+                          key={index}
+                          href={stream.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center"
+                        >
+                          {stream.name.toLowerCase().includes('crunchyroll') && (
+                            <img
+                              src="https://static.crunchyroll.com/cr-assets/2.0/crunchyroll_logo.png"
+                              alt="Crunchyroll"
+                              className="h-4 w-auto"
+                            />
+                          )}
+                          {stream.name.toLowerCase().includes('funimation') && (
+                            <img
+                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Funimation_Logo.svg/1200px-Funimation_Logo.svg.png"
+                              alt="Funimation"
+                              className="h-4 w-auto"
+                            />
+                          )}
+                          {!stream.name.toLowerCase().includes('crunchyroll') &&
+                            !stream.name.toLowerCase().includes('funimation') && (
+                              <span className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
+                                {stream.name}
+                              </span>
+                            )}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   {anime.node.genres && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {anime.node.genres.map((genre, index) => (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {anime.node.genres?.slice(0, isCompactView ? 2 : undefined).map((genre, index) => (
                         <span
                           key={index}
-                          className={`inline-block text-xs px-2 py-0.5 rounded-full ${
-                            isCompactView 
-                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                              : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300'
-                          }`}
+                          className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full"
                         >
                           {genre}
                         </span>
                       ))}
+                      {isCompactView && anime.node.genres?.length > 2 && (
+                        <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
+                          +{anime.node.genres.length - 2}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
