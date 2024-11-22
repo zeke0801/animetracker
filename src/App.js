@@ -307,22 +307,24 @@ function App() {
                       Season: {anime.node.start_season.season} {anime.node.start_season.year}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {anime.node.genres?.map((genre, index) => (
-                      <span
-                        key={index}
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          isCompactView 
-                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                            : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300'
-                        }`}
-                      >
-                        {genre.name}
-                      </span>
-                    ))}
-                  </div>
+                  {anime.node.genres && anime.node.genres.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {anime.node.genres.map((genre, index) => (
+                        <span
+                          key={index}
+                          className={`inline-block text-xs px-2 py-0.5 rounded-full ${
+                            isCompactView 
+                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                              : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300'
+                          }`}
+                        >
+                          {genre.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {!isCompactView && anime.node.synopsis && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 line-clamp-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 line-clamp-3 leading-relaxed">
                       {anime.node.synopsis}
                     </p>
                   )}
