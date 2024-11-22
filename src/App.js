@@ -297,7 +297,8 @@ function App() {
 
         {/* Footer */}
         <footer className="mt-12 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          Powered by <a href="https://myanimelist.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">MAL</a>
+          Powered by <a href="https://myanimelist.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">MAL</a> <br />
+          Created by Zeke
         </footer>
       </div>
     </div>
