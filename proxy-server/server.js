@@ -70,17 +70,14 @@ app.get('/api/anime', async (req, res) => {
             return res.status(400).json({ error: 'Query parameter is required' });
         }
 
-        const apiUrl = `https://api.myanimelist.net/v2/anime?q=${encodeURIComponent(q)}&limit=20&fields=id,title,main_picture,synopsis,mean,rank,popularity,num_episodes,status`;
+        const apiUrl = `https://api.myanimelist.net/v2/anime?q=${encodeURIComponent(q)}&limit=20&fields=id,title,main_picture,synopsis,mean,rank,popularity,num_episodes,status,start_date,broadcast,media_type,source,rating,start_season`;
         
         console.log('Searching anime:', apiUrl); // Debug log
-        console.log('Using MAL Client ID:', process.env.MAL_CLIENT_ID); // Debug log
         
         const response = await fetch(apiUrl, {
             method: 'GET',
             headers: {
-                'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID
             }
         });
 
@@ -90,9 +87,13 @@ app.get('/api/anime', async (req, res) => {
                 status: response.status,
                 statusText: response.statusText,
                 body: errorText,
-                headers: response.headers
+                url: apiUrl,
+                headers: Object.fromEntries(response.headers)
             });
-            throw new Error(`MAL API responded with status ${response.status}: ${errorText}`);
+            return res.status(response.status).json({ 
+                error: 'MAL API error',
+                details: errorText
+            });
         }
 
         const data = await response.json();
@@ -101,7 +102,8 @@ app.get('/api/anime', async (req, res) => {
         console.error('Search anime error:', error);
         res.status(500).json({ 
             error: 'Failed to search anime',
-            message: error.message 
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
