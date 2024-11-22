@@ -454,7 +454,7 @@ function App() {
                 </button>
               </div>
             ) : (
-              // Detailed view (existing code)
+              // Detailed view
               <div 
                 key={anime.node.id} 
                 className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer`}
@@ -481,7 +481,7 @@ function App() {
                     )}
                   </button>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 px-2 pb-2">
                   <h3 className="font-bold text-gray-900 dark:text-white text-lg">
                     {anime.node.title}
                   </h3>
