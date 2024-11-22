@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
-import { searchAnime, getSeasonalAnime } from './services/animeApi';
+import { getSeasonalAnime } from './services/animeApi';
 import './App.css';
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [timeFilter, setTimeFilter] = useState('today');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
@@ -28,20 +27,10 @@ function App() {
     localStorage.setItem('compactView', isCompactView);
   }, [isCompactView]);
 
-  const { data: searchResults, isLoading: isSearchLoading } = useQuery({
-    queryKey: ['search', searchTerm],
-    queryFn: () => searchAnime(searchTerm),
-    enabled: searchTerm.length > 0,
-  });
-
   const { data: seasonalAnime, isLoading: isSeasonalLoading } = useQuery({
     queryKey: ['seasonal'],
     queryFn: getSeasonalAnime,
   });
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -100,7 +89,7 @@ function App() {
     return 'fall';
   };
 
-  const filteredAnime = (searchTerm ? searchResults?.data : seasonalAnime?.data)?.filter(filterAnimeByTime);
+  const filteredAnime = seasonalAnime?.data?.filter(filterAnimeByTime);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
@@ -233,17 +222,6 @@ function App() {
           </button>
         </div>
 
-        {/* Search Input */}
-        <div className="mb-8">
-          <input
-            type="text"
-            placeholder="Search anime..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-          />
-        </div>
-
         {/* Anime Grid */}
         <div className={`grid gap-6 ${
           isCompactView 
@@ -251,45 +229,44 @@ function App() {
             : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
         }`}>
           {filteredAnime?.map((anime) => (
-            <div
-              key={anime.node.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-            >
-              <img
-                src={anime.node.main_picture.medium}
-                alt={anime.node.title}
-                className="w-full h-48 object-cover"
-              />
-              <div className={`p-4 ${isCompactView ? 'space-y-1' : 'space-y-2'}`}>
-                <h2 className={`font-semibold text-gray-900 dark:text-white ${
-                  isCompactView ? 'text-sm line-clamp-1' : 'text-xl mb-2'
+            <div key={anime.node.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-200 hover:scale-105 ${
+              isCompactView ? 'p-2' : 'p-4'
+            }`}>
+              <div className="relative">
+                <img
+                  src={anime.node.main_picture?.large || anime.node.main_picture?.medium}
+                  alt={anime.node.title}
+                  className="w-full h-48 object-cover rounded"
+                />
+              </div>
+              <div className={`${isCompactView ? 'mt-2' : 'mt-4'}`}>
+                <h3 className={`font-bold text-gray-900 dark:text-white ${
+                  isCompactView ? 'text-sm' : 'text-lg'
                 }`}>
                   {anime.node.title}
-                </h2>
-                {!isCompactView && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                    {anime.node.synopsis || 'No synopsis available'}
+                </h3>
+                <div className="mt-2 space-y-1">
+                  {anime.node.broadcast?.day_of_the_week && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Airs: {anime.node.broadcast.day_of_the_week} at {anime.node.broadcast.start_time} (JST)
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Rating: {anime.node.rating || 'N/A'}
                   </p>
-                )}
-                {!isCompactView && anime.node.mean && (
-                  <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                    Rating: {anime.node.mean}
-                  </div>
-                )}
-                {anime.node.broadcast && (
-                  <div className={`text-gray-500 dark:text-gray-400 ${
-                    isCompactView ? 'text-xs' : 'text-sm mt-1'
-                  }`}>
-                    Airs: {anime.node.broadcast.day_of_the_week} at {anime.node.broadcast.start_time} (JST)
-                  </div>
-                )}
+                  {anime.node.start_season && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Season: {anime.node.start_season.season} {anime.node.start_season.year}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Loading States */}
-        {(isSearchLoading || isSeasonalLoading) && (
+        {isSeasonalLoading && (
           <div className="flex justify-center items-center mt-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
           </div>

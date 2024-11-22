@@ -34,36 +34,8 @@ const setToCache = (key, data) => {
     }
 };
 
-export const searchAnime = async (query) => {
-    const cacheKey = `search-${query}`;
-    const cached = getFromCache(cacheKey);
-    if (cached) return cached;
-
-    const response = await fetch(`${PROXY_URL}/anime?q=${encodeURIComponent(query)}&limit=20`);
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    const data = await response.json();
-    setToCache(cacheKey, data);
-    return data;
-};
-
-export const getAnimeDetails = async (id) => {
-    const cacheKey = `anime-${id}`;
-    const cached = getFromCache(cacheKey);
-    if (cached) return cached;
-
-    const response = await fetch(`${PROXY_URL}/anime/${id}?fields=id,title,main_picture,synopsis,mean,rank,popularity,num_episodes,status`);
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    const data = await response.json();
-    setToCache(cacheKey, data);
-    return data;
-};
-
 export const getSeasonalAnime = async () => {
-    const cacheKey = 'seasonal-anime';
+    const cacheKey = 'seasonal';
     const cached = getFromCache(cacheKey);
     if (cached) return cached;
 
