@@ -4,18 +4,36 @@ import { QRCodeSVG } from 'qrcode.react';
 import { getSeasonalAnime } from './services/animeApi';
 import './App.css';
 
+// Helper functions for localStorage
+const STORAGE_DOMAIN = 'animetracker.';
+const getStorageItem = (key, defaultValue) => {
+  try {
+    const item = localStorage.getItem(STORAGE_DOMAIN + key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
+const setStorageItem = (key, value) => {
+  try {
+    localStorage.setItem(STORAGE_DOMAIN + key, JSON.stringify(value));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
 function App() {
   const [timeFilter, setTimeFilter] = useState('today');
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true';
+    return getStorageItem('darkMode', false);
   });
   const [isCompactView, setIsCompactView] = useState(() => {
-    return localStorage.getItem('compactView') === 'true';
+    return getStorageItem('compactView', false);
   });
   const [showQR, setShowQR] = useState(false);
   const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites');
-    return saved ? JSON.parse(saved) : [];
+    return getStorageItem('favorites', []);
   });
 
   useEffect(() => {
@@ -24,15 +42,15 @@ function App() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('darkMode', isDarkMode);
+    setStorageItem('darkMode', isDarkMode);
   }, [isDarkMode]);
 
   useEffect(() => {
-    localStorage.setItem('compactView', isCompactView);
+    setStorageItem('compactView', isCompactView);
   }, [isCompactView]);
 
   useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+    setStorageItem('favorites', favorites);
   }, [favorites]);
 
   const { data: seasonalAnime, isLoading: isSeasonalLoading } = useQuery({
@@ -46,11 +64,10 @@ function App() {
 
   const toggleFavorite = (animeId) => {
     setFavorites(prev => {
-      if (prev.includes(animeId)) {
-        return prev.filter(id => id !== animeId);
-      } else {
-        return [...prev, animeId];
-      }
+      const newFavorites = prev.includes(animeId)
+        ? prev.filter(id => id !== animeId)
+        : [...prev, animeId];
+      return newFavorites;
     });
   };
 
