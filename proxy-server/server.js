@@ -53,7 +53,20 @@ app.get('/api/anime/season', async (req, res) => {
         }
 
         const data = await response.json();
-        res.json(data);
+        
+        // Transform the response to include simplified genre names
+        const transformedData = {
+            ...data,
+            data: data.data.map(item => ({
+                ...item,
+                node: {
+                    ...item.node,
+                    genres: item.node.genres?.map(g => g.name) || []
+                }
+            }))
+        };
+        
+        res.json(transformedData);
     } catch (error) {
         console.error('Seasonal anime error:', error);
         res.status(500).json({ 
