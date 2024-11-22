@@ -13,6 +13,10 @@ function App() {
     return localStorage.getItem('compactView') === 'true';
   });
   const [showQR, setShowQR] = useState(false);
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     if (isDarkMode) {
@@ -27,6 +31,10 @@ function App() {
     localStorage.setItem('compactView', isCompactView);
   }, [isCompactView]);
 
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
   const { data: seasonalAnime, isLoading: isSeasonalLoading } = useQuery({
     queryKey: ['seasonal'],
     queryFn: getSeasonalAnime,
@@ -34,6 +42,16 @@ function App() {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const toggleFavorite = (animeId) => {
+    setFavorites(prev => {
+      if (prev.includes(animeId)) {
+        return prev.filter(id => id !== animeId);
+      } else {
+        return [...prev, animeId];
+      }
+    });
   };
 
   const filterAnimeByTime = (anime) => {
@@ -80,7 +98,23 @@ function App() {
     }
   };
 
-  // Helper function to get current season
+  const sortAnimeByFavorites = (animeList) => {
+    if (!animeList) return [];
+    
+    return [...animeList].sort((a, b) => {
+      const aIsFavorite = favorites.includes(a.node.id);
+      const bIsFavorite = favorites.includes(b.node.id);
+      
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      
+      // If both are favorites or both are not, sort by broadcast time
+      const aTime = a.node.broadcast?.start_time || '';
+      const bTime = b.node.broadcast?.start_time || '';
+      return aTime.localeCompare(bTime);
+    });
+  };
+
   const getCurrentSeason = () => {
     const month = new Date().getMonth() + 1; // getMonth() returns 0-11
     if (month >= 1 && month <= 3) return 'winter';
@@ -89,7 +123,7 @@ function App() {
     return 'fall';
   };
 
-  const filteredAnime = seasonalAnime?.data?.filter(filterAnimeByTime);
+  const filteredAnime = sortAnimeByFavorites(seasonalAnime?.data?.filter(filterAnimeByTime));
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
@@ -238,6 +272,20 @@ function App() {
                   alt={anime.node.title}
                   className="w-full h-48 object-cover rounded"
                 />
+                <button
+                  onClick={() => toggleFavorite(anime.node.id)}
+                  className="absolute top-2 right-2 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                >
+                  {favorites.includes(anime.node.id) ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  )}
+                </button>
               </div>
               <div className={`${isCompactView ? 'mt-2' : 'mt-4'}`}>
                 <h3 className={`font-bold text-gray-900 dark:text-white ${
