@@ -187,12 +187,35 @@ function App() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+                <div className="space-y-4">
                   <img
                     src={selectedAnime.node.main_picture.large}
                     alt={selectedAnime.node.title}
                     className="w-full rounded-lg shadow-lg"
                   />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(selectedAnime.node.id);
+                    }}
+                    className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {favorites.includes(selectedAnime.node.id) ? (
+                      <>
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                        </svg>
+                        Remove from Favorites
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        Add to Favorites
+                      </>
+                    )}
+                  </button>
                 </div>
                 
                 <div className="space-y-4">
@@ -395,109 +418,139 @@ function App() {
             : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
         }`}>
           {filteredAnime?.map((anime) => (
-            <div 
-              key={anime.node.id} 
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer ${
-                isCompactView ? 'h-[120px]' : ''
-              }`}
-              onClick={() => setSelectedAnime(anime)}
-            >
-              <div className="relative">
+            isCompactView ? (
+              // Compact view with overlay title
+              <div className="relative h-[120px] group" key={anime.node.id}>
                 <img
-                  src={anime.node.main_picture?.large || anime.node.main_picture?.medium}
+                  src={anime.node.main_picture?.medium || anime.node.main_picture?.large}
                   alt={anime.node.title}
-                  className="w-full h-48 object-cover rounded"
+                  className="w-full h-full object-cover"
                 />
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 transition-opacity">
+                  <h3 className="text-white text-center font-medium text-sm line-clamp-2">
+                    {anime.node.title}
+                  </h3>
+                </div>
                 <button
-                  onClick={() => toggleFavorite(anime.node.id)}
-                  className="absolute top-2 right-2 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(anime.node.id);
+                  }}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-colors"
                 >
                   {favorites.includes(anime.node.id) ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                     </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   )}
                 </button>
               </div>
-              <div className={`${isCompactView ? 'mt-2' : 'mt-4'}`}>
-                <h3 className={`font-bold text-gray-900 dark:text-white ${
-                  isCompactView ? 'text-sm' : 'text-lg'
-                }`}>
-                  {anime.node.title}
-                </h3>
-                <div className="mt-2 space-y-1">
-                  {anime.node.broadcast?.day_of_the_week && (
+            ) : (
+              // Detailed view (existing code)
+              <div 
+                key={anime.node.id} 
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer`}
+                onClick={() => setSelectedAnime(anime)}
+              >
+                <div className="relative">
+                  <img
+                    src={anime.node.main_picture?.large || anime.node.main_picture?.medium}
+                    alt={anime.node.title}
+                    className="w-full h-48 object-cover rounded"
+                  />
+                  <button
+                    onClick={() => toggleFavorite(anime.node.id)}
+                    className="absolute top-2 right-2 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                  >
+                    {favorites.includes(anime.node.id) ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div className="mt-4">
+                  <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+                    {anime.node.title}
+                  </h3>
+                  <div className="mt-2 space-y-1">
+                    {anime.node.broadcast?.day_of_the_week && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Airs: {anime.node.broadcast.day_of_the_week} at {anime.node.broadcast.start_time} (JST)
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Airs: {anime.node.broadcast.day_of_the_week} at {anime.node.broadcast.start_time} (JST)
+                      Rating: {anime.node.rating || 'N/A'}
                     </p>
-                  )}
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Rating: {anime.node.rating || 'N/A'}
-                  </p>
-                  {anime.node.start_season && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Season: {anime.node.start_season.season} {anime.node.start_season.year}
-                    </p>
-                  )}
-                  {anime.node.streaming && anime.node.streaming.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Stream:</span>
-                      {anime.node.streaming.map((stream, index) => (
-                        <a
-                          key={index}
-                          href={stream.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center"
-                        >
-                          {stream.name.toLowerCase().includes('crunchyroll') && (
-                            <img
-                              src="https://static.crunchyroll.com/cr-assets/2.0/crunchyroll_logo.png"
-                              alt="Crunchyroll"
-                              className="h-4 w-auto"
-                            />
-                          )}
-                          {stream.name.toLowerCase().includes('funimation') && (
-                            <img
-                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Funimation_Logo.svg/1200px-Funimation_Logo.svg.png"
-                              alt="Funimation"
-                              className="h-4 w-auto"
-                            />
-                          )}
-                          {!stream.name.toLowerCase().includes('crunchyroll') &&
-                            !stream.name.toLowerCase().includes('funimation') && (
-                              <span className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
-                                {stream.name}
-                              </span>
+                    {anime.node.start_season && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Season: {anime.node.start_season.season} {anime.node.start_season.year}
+                      </p>
+                    )}
+                    {anime.node.streaming && anime.node.streaming.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Stream:</span>
+                        {anime.node.streaming.map((stream, index) => (
+                          <a
+                            key={index}
+                            href={stream.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center"
+                          >
+                            {stream.name.toLowerCase().includes('crunchyroll') && (
+                              <img
+                                src="https://static.crunchyroll.com/cr-assets/2.0/crunchyroll_logo.png"
+                                alt="Crunchyroll"
+                                className="h-4 w-auto"
+                              />
                             )}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                  {anime.node.genres && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {anime.node.genres?.slice(0, isCompactView ? 2 : undefined).map((genre, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full"
-                        >
-                          {genre}
-                        </span>
-                      ))}
-                      {isCompactView && anime.node.genres?.length > 2 && (
-                        <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
-                          +{anime.node.genres.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                            {stream.name.toLowerCase().includes('funimation') && (
+                              <img
+                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Funimation_Logo.svg/1200px-Funimation_Logo.svg.png"
+                                alt="Funimation"
+                                className="h-4 w-auto"
+                              />
+                            )}
+                            {!stream.name.toLowerCase().includes('crunchyroll') &&
+                              !stream.name.toLowerCase().includes('funimation') && (
+                                <span className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
+                                  {stream.name}
+                                </span>
+                              )}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {anime.node.genres && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {anime.node.genres?.slice(0, isCompactView ? 2 : undefined).map((genre, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full"
+                          >
+                            {genre}
+                          </span>
+                        ))}
+                        {isCompactView && anime.node.genres?.length > 2 && (
+                          <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
+                            +{anime.node.genres.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )
           ))}
         </div>
 
