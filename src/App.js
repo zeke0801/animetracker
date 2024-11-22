@@ -59,71 +59,45 @@ function App() {
     if (!anime?.node?.broadcast?.day_of_the_week) return false;
     if (anime.node.media_type === 'dub') return false;
     
-    // Check if it's current season anime
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentSeason = getCurrentSeason();
-    
-    const animeStartSeason = anime.node.start_season;
-    if (!animeStartSeason || 
-        animeStartSeason.year !== currentYear || 
-        animeStartSeason.season !== currentSeason) {
-      return false;
+    if (timeFilter === 'favorites') {
+      return favorites.includes(anime.node.id);
     }
 
     const today = new Date();
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const todayName = daysOfWeek[today.getDay()].toLowerCase();
-    const animeDay = anime.node.broadcast.day_of_the_week.toLowerCase();
-    
+    const todayIndex = today.getDay();
+    const animeDay = daysOfWeek.indexOf(anime.node.broadcast.day_of_the_week.toLowerCase());
+
     switch (timeFilter) {
       case 'today':
-        return animeDay === todayName;
-      case 'tomorrow': {
-        const tomorrowIndex = (today.getDay() + 1) % 7;
-        const tomorrowName = daysOfWeek[tomorrowIndex].toLowerCase();
-        return animeDay === tomorrowName;
-      }
-      case 'past-week': {
-        const currentDayIndex = today.getDay();
-        const pastWeekDays = [];
-        for (let i = 7; i >= 0; i--) {
-          const dayIndex = (currentDayIndex - i + 7) % 7;
-          pastWeekDays.push(daysOfWeek[dayIndex]);
-        }
-        return pastWeekDays.includes(animeDay);
-      }
+        return animeDay === todayIndex;
+      case 'tomorrow':
+        return animeDay === (todayIndex + 1) % 7;
       default:
         return true;
     }
   };
 
-  const sortAnimeByFavorites = (animeList) => {
+  const sortAnimeByBroadcastTime = (animeList) => {
     if (!animeList) return [];
     
     return [...animeList].sort((a, b) => {
-      const aIsFavorite = favorites.includes(a.node.id);
-      const bIsFavorite = favorites.includes(b.node.id);
+      // Convert day and time to comparable values
+      const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const aDay = daysOfWeek.indexOf(a.node.broadcast.day_of_the_week.toLowerCase());
+      const bDay = daysOfWeek.indexOf(b.node.broadcast.day_of_the_week.toLowerCase());
       
-      if (aIsFavorite && !bIsFavorite) return -1;
-      if (!aIsFavorite && bIsFavorite) return 1;
+      const aTime = a.node.broadcast.start_time || '';
+      const bTime = b.node.broadcast.start_time || '';
       
-      // If both are favorites or both are not, sort by broadcast time
-      const aTime = a.node.broadcast?.start_time || '';
-      const bTime = b.node.broadcast?.start_time || '';
-      return aTime.localeCompare(bTime);
+      if (aDay === bDay) {
+        return aTime.localeCompare(bTime);
+      }
+      return aDay - bDay;
     });
   };
 
-  const getCurrentSeason = () => {
-    const month = new Date().getMonth() + 1; // getMonth() returns 0-11
-    if (month >= 1 && month <= 3) return 'winter';
-    if (month >= 4 && month <= 6) return 'spring';
-    if (month >= 7 && month <= 9) return 'summer';
-    return 'fall';
-  };
-
-  const filteredAnime = sortAnimeByFavorites(seasonalAnime?.data?.filter(filterAnimeByTime));
+  const filteredAnime = sortAnimeByBroadcastTime(seasonalAnime?.data?.filter(filterAnimeByTime));
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
@@ -196,17 +170,7 @@ function App() {
 
         {/* Time Filter Buttons and View Toggle */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setTimeFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium text-[0.9rem] transition-colors ${
-                timeFilter === 'all'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              All
-            </button>
+          <div className="flex space-x-2">
             <button
               onClick={() => setTimeFilter('today')}
               className={`px-4 py-2 rounded-lg font-medium text-[0.9rem] transition-colors ${
@@ -228,14 +192,14 @@ function App() {
               Tomorrow
             </button>
             <button
-              onClick={() => setTimeFilter('past-week')}
+              onClick={() => setTimeFilter('favorites')}
               className={`px-4 py-2 rounded-lg font-medium text-[0.9rem] transition-colors ${
-                timeFilter === 'past-week'
+                timeFilter === 'favorites'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
               }`}
             >
-              Past Week
+              Favorites
             </button>
           </div>
           
