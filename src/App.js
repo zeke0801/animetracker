@@ -420,7 +420,11 @@ function App() {
           {filteredAnime?.map((anime) => (
             isCompactView ? (
               // Compact view with overlay title
-              <div className="relative h-[120px] group" key={anime.node.id}>
+              <div 
+                className="relative h-[120px] group cursor-pointer" 
+                key={anime.node.id}
+                onClick={() => setSelectedAnime(anime)}
+              >
                 <img
                   src={anime.node.main_picture?.medium || anime.node.main_picture?.large}
                   alt={anime.node.title}
