@@ -186,6 +186,26 @@ function App() {
     });
   };
 
+  const formatAirTime = (dayOfWeek, startTime) => {
+    if (!dayOfWeek) return 'Air time unknown';
+    
+    // Convert JST time to PHT (JST is UTC+9, PHT is UTC+8)
+    let [hours, minutes] = (startTime || '00:00').split(':').map(Number);
+    
+    // Subtract 1 hour for PHT
+    hours = (hours - 1 + 24) % 24;
+    
+    // Format time in 12-hour format
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    
+    // Capitalize first letter of day
+    const formattedDay = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1).toLowerCase();
+    
+    return `${formattedDay}s at ${formattedTime} PHT`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       {/* QR Code Modal */}
@@ -268,7 +288,7 @@ function App() {
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-white">Broadcast</h3>
                       <p className="text-gray-600 dark:text-gray-300">
-                        {selectedAnime.node.broadcast.day_of_the_week} at {selectedAnime.node.broadcast.start_time} (JST)
+                        {formatAirTime(selectedAnime.node.broadcast.day_of_the_week, selectedAnime.node.broadcast.start_time)}
                       </p>
                     </div>
                   )}
@@ -539,7 +559,7 @@ function App() {
                   <div className="mt-2 space-y-1">
                     {anime.node.broadcast?.day_of_the_week && (
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Airs: {anime.node.broadcast.day_of_the_week} at {anime.node.broadcast.start_time} (JST)
+                        Airs: {formatAirTime(anime.node.broadcast.day_of_the_week, anime.node.broadcast.start_time)}
                       </p>
                     )}
                     <p className="text-sm text-gray-600 dark:text-gray-300">
