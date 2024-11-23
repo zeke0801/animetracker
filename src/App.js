@@ -108,7 +108,7 @@ function App() {
   const filteredAnime = useMemo(() => {
     if (!seasonalAnime?.data) return [];
 
-    return seasonalAnime.data.filter(anime => {
+    const filtered = seasonalAnime.data.filter(anime => {
       // Skip if no broadcast info or if it's dubbed/non-Japanese
       if (!anime?.node?.broadcast?.day_of_the_week) return false;
       if (anime.node.media_type === 'dub') return false;
@@ -142,6 +142,15 @@ function App() {
         default:
           return true;
       }
+    });
+
+    // Sort favorites to the top for all filters
+    return filtered.sort((a, b) => {
+      const aIsFavorite = favorites.includes(a.node.id);
+      const bIsFavorite = favorites.includes(b.node.id);
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      return 0;
     });
   }, [seasonalAnime?.data, timeFilter, favorites, currentYear, currentSeason]);
 
@@ -385,8 +394,8 @@ function App() {
               aria-label="Toggle dark mode"
             >
               {isDarkMode ? (
-                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               ) : (
                 <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
