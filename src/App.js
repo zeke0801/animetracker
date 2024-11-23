@@ -185,65 +185,6 @@ function App() {
     return 'fall';
   };
 
-  const filterAnimeByTime = (anime) => {
-    // Skip if no broadcast info or if it's dubbed/non-Japanese
-    if (!anime?.node?.broadcast?.day_of_the_week) return false;
-    if (anime.node.media_type === 'dub') return false;
-
-    // Check if it's current season anime
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentSeason = getCurrentSeason();
-    
-    const animeStartSeason = anime.node.start_season;
-    if (!animeStartSeason || 
-        animeStartSeason.year !== currentYear || 
-        animeStartSeason.season !== currentSeason) {
-      return false;
-    }
-    
-    if (timeFilter === 'favorites') {
-      return favorites.includes(anime.node.id);
-    }
-
-    if (timeFilter === 'all') {
-      return true;
-    }
-
-    const today = new Date();
-    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const todayIndex = today.getDay();
-    const animeDay = daysOfWeek.indexOf(anime.node.broadcast.day_of_the_week.toLowerCase());
-
-    switch (timeFilter) {
-      case 'today':
-        return animeDay === todayIndex;
-      case 'tomorrow':
-        return animeDay === (todayIndex + 1) % 7;
-      default:
-        return true;
-    }
-  };
-
-  const sortAnimeByBroadcastTime = (animeList) => {
-    if (!animeList) return [];
-    
-    return [...animeList].sort((a, b) => {
-      // Convert day and time to comparable values
-      const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      const aDay = daysOfWeek.indexOf(a.node.broadcast.day_of_the_week.toLowerCase());
-      const bDay = daysOfWeek.indexOf(b.node.broadcast.day_of_the_week.toLowerCase());
-      
-      const aTime = a.node.broadcast.start_time || '';
-      const bTime = b.node.broadcast.start_time || '';
-      
-      if (aDay === bDay) {
-        return aTime.localeCompare(bTime);
-      }
-      return aDay - bDay;
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       {/* QR Code Modal */}
