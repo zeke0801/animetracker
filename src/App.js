@@ -456,15 +456,9 @@ function App() {
             className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             aria-label="Toggle view mode"
           >
-            {isCompactView ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 110 4v2a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 110-4h-2a2 2 0 00-2 2H5z" />
-              </svg>
-            )}
+            <span className="font-bold text-gray-700 dark:text-gray-200">
+              {isCompactView ? 'D' : 'C'}
+            </span>
           </button>
         </div>
 
