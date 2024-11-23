@@ -7,7 +7,7 @@ const AnimeCard = ({ anime }) => {
                 src={anime.main_picture?.medium}
                 alt={anime.title}
                 className="w-full h-64 object-cover"
-                //note
+                loading="lazy" // Add lazy loading for better performance
             />
             <div className="p-4">
                 <h3 className="text-lg font-semibold mb-2">{anime.title}</h3>
