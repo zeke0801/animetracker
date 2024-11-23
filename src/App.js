@@ -1,49 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
 import { getSeasonalAnime } from './services/animeApi';
 import './App.css';
 
-// Helper functions for localStorage
+// Helper functions for localStorage with caching
 const STORAGE_DOMAIN = 'animetracker.';
+const storageCache = new Map();
+
 const getStorageItem = (key, defaultValue) => {
+  const cacheKey = STORAGE_DOMAIN + key;
+  
+  // Check cache first
+  if (storageCache.has(cacheKey)) {
+    return storageCache.get(cacheKey);
+  }
+
   try {
-    const item = localStorage.getItem(STORAGE_DOMAIN + key);
-    return item ? JSON.parse(item) : defaultValue;
+    const item = localStorage.getItem(cacheKey);
+    const value = item ? JSON.parse(item) : defaultValue;
+    // Cache the value
+    storageCache.set(cacheKey, value);
+    return value;
   } catch {
     return defaultValue;
   }
 };
 
 const setStorageItem = (key, value) => {
+  const cacheKey = STORAGE_DOMAIN + key;
   try {
-    localStorage.setItem(STORAGE_DOMAIN + key, JSON.stringify(value));
+    // Update cache first
+    storageCache.set(cacheKey, value);
+    // Then update localStorage
+    localStorage.setItem(cacheKey, JSON.stringify(value));
   } catch (error) {
     console.error('Error saving to localStorage:', error);
   }
 };
 
 function App() {
+  // Initialize state with memoized localStorage values
   const [timeFilter, setTimeFilter] = useState('today');
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return getStorageItem('darkMode', true);
-  });
-  const [isCompactView, setIsCompactView] = useState(() => {
-    return getStorageItem('compactView', false);
-  });
+  const [isDarkMode, setIsDarkMode] = useState(() => getStorageItem('darkMode', true));
+  const [isCompactView, setIsCompactView] = useState(() => getStorageItem('compactView', false));
   const [showQR, setShowQR] = useState(false);
-  const [favorites, setFavorites] = useState(() => {
-    return getStorageItem('favorites', []);
-  });
+  const [favorites, setFavorites] = useState(() => getStorageItem('favorites', []));
   const [selectedAnime, setSelectedAnime] = useState(null);
+  const [isOnline, setIsOnline] = useState(window.navigator.onLine);
 
+  // Batch localStorage updates
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    setStorageItem('darkMode', isDarkMode);
+    const updateTheme = () => {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+    
+    // Batch multiple DOM updates together
+    requestAnimationFrame(() => {
+      updateTheme();
+      setStorageItem('darkMode', isDarkMode);
+    });
   }, [isDarkMode]);
 
   useEffect(() => {
@@ -54,10 +74,95 @@ function App() {
     setStorageItem('favorites', favorites);
   }, [favorites]);
 
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const { data: seasonalAnime, isLoading: isSeasonalLoading } = useQuery({
     queryKey: ['seasonal'],
     queryFn: getSeasonalAnime,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
+
+  // Memoize expensive computations
+  const currentSeason = useMemo(() => {
+    const month = new Date().getMonth() + 1;
+    if (month >= 1 && month <= 3) return 'winter';
+    if (month >= 4 && month <= 6) return 'spring';
+    if (month >= 7 && month <= 9) return 'summer';
+    return 'fall';
+  }, []);
+
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+
+  const filteredAnime = useMemo(() => {
+    if (!seasonalAnime?.data) return [];
+
+    return seasonalAnime.data.filter(anime => {
+      // Skip if no broadcast info or if it's dubbed/non-Japanese
+      if (!anime?.node?.broadcast?.day_of_the_week) return false;
+      if (anime.node.media_type === 'dub') return false;
+
+      // Check if it's current season anime
+      const animeStartSeason = anime.node.start_season;
+      if (!animeStartSeason || 
+          animeStartSeason.year !== currentYear || 
+          animeStartSeason.season !== currentSeason) {
+        return false;
+      }
+      
+      if (timeFilter === 'favorites') {
+        return favorites.includes(anime.node.id);
+      }
+
+      if (timeFilter === 'all') {
+        return true;
+      }
+
+      const today = new Date();
+      const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const todayIndex = today.getDay();
+      const animeDay = daysOfWeek.indexOf(anime.node.broadcast.day_of_the_week.toLowerCase());
+
+      switch (timeFilter) {
+        case 'today':
+          return animeDay === todayIndex;
+        case 'tomorrow':
+          return animeDay === (todayIndex + 1) % 7;
+        default:
+          return true;
+      }
+    });
+  }, [seasonalAnime?.data, timeFilter, favorites, currentYear, currentSeason]);
+
+  const sortedAnime = useMemo(() => {
+    if (!filteredAnime) return [];
+    
+    return [...filteredAnime].sort((a, b) => {
+      // Convert day and time to comparable values
+      const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const aDay = daysOfWeek.indexOf(a.node.broadcast.day_of_the_week.toLowerCase());
+      const bDay = daysOfWeek.indexOf(b.node.broadcast.day_of_the_week.toLowerCase());
+      
+      const aTime = a.node.broadcast.start_time || '';
+      const bTime = b.node.broadcast.start_time || '';
+      
+      if (aDay === bDay) {
+        return aTime.localeCompare(bTime);
+      }
+      return aDay - bDay;
+    });
+  }, [filteredAnime]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -138,8 +243,6 @@ function App() {
       return aDay - bDay;
     });
   };
-
-  const filteredAnime = sortAnimeByBroadcastTime(seasonalAnime?.data?.filter(filterAnimeByTime));
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
@@ -307,6 +410,18 @@ function App() {
       )}
 
       <div className="container mx-auto px-4 py-8">
+        {/* Offline Message */}
+        {!isOnline && (
+          <div className="mb-6 p-4 bg-pink-50 dark:bg-pink-900/30 rounded-lg text-center">
+            <div className="flex items-center justify-center space-x-2 text-pink-600 dark:text-pink-300">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="font-medium">Aww I can't access the net. - Miku</p>
+            </div>
+          </div>
+        )}
+        
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -405,7 +520,7 @@ function App() {
               </svg>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5z" />
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 110 4v2a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 110-4h-2a2 2 0 00-2 2H5z" />
               </svg>
             )}
           </button>
@@ -417,7 +532,7 @@ function App() {
             ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2' 
             : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
         }`}>
-          {filteredAnime?.map((anime) => (
+          {sortedAnime?.map((anime) => (
             isCompactView ? (
               // Compact view with overlay title
               <div 
