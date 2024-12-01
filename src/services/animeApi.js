@@ -34,6 +34,35 @@ const setToCache = (key, data) => {
     }
 };
 
+// Keep-alive mechanism
+let keepAliveInterval;
+
+export const startKeepAlive = () => {
+    // Clear any existing interval
+    if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+    }
+
+    // Ping the server every 10 minutes
+    keepAliveInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`${PROXY_URL.replace('/api', '')}/health`);
+            if (!response.ok) {
+                console.warn('Keep-alive ping failed');
+            }
+        } catch (error) {
+            console.warn('Keep-alive error:', error);
+        }
+    }, 10 * 60 * 1000); // 10 minutes
+};
+
+export const stopKeepAlive = () => {
+    if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+    }
+};
+
 export const getSeasonalAnime = async () => {
     const cacheKey = 'seasonal';
     const cached = getFromCache(cacheKey);

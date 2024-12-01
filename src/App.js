@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
-import { getSeasonalAnime } from './services/animeApi';
+import { getSeasonalAnime, startKeepAlive, stopKeepAlive } from './services/animeApi';
 import './App.css';
 
 // Helper functions for localStorage with caching
@@ -48,6 +48,15 @@ function App() {
   const [favorites, setFavorites] = useState(() => getStorageItem('favorites', []));
   const [selectedAnime, setSelectedAnime] = useState(null);
   const [isOnline, setIsOnline] = useState(window.navigator.onLine);
+
+  useEffect(() => {
+    startKeepAlive();
+    
+    // Clean up when the app unmounts
+    return () => {
+      stopKeepAlive();
+    };
+  }, []);
 
   // Batch localStorage updates
   useEffect(() => {
